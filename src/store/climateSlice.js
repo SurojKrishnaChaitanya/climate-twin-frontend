@@ -55,11 +55,10 @@ const climateSlice = createSlice({
 
     activePopup: null,
     aiSuggestions: [],
-    // UI Interaction Tracking Hooks
-    hoveredDay: 'Day 1', // Links Chart 1 mouse-overs directly to Chart 2 inputs
-    customMarker: null,  // Holds manual geospatial coordinates: { lat, lng }
-    queryResponse: '',   // Displays conversational text output from the simulation sandbox
-    isAlertOpen: true,   // Controls structural country-to-region introductory alert state
+    hoveredDay: 'Day 1',
+    customMarker: null,
+    queryResponse: '',
+    isAlertOpen: true,
     isLoading: false
   },
   reducers: {
@@ -82,7 +81,7 @@ const climateSlice = createSlice({
       state.hoveredDay = action.payload;
     },
     setCustomMarker: (state, action) => {
-      state.customMarker = action.payload; // Formatted payload structure: { lat: float, lng: float }
+      state.customMarker = action.payload;
     },
     dismissPilotAlert: (state) => {
       state.isAlertOpen = false;
@@ -90,7 +89,6 @@ const climateSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // --- Baseline Retrieval Cycle ---
       .addCase(fetchMonthlyClimateData.pending, (state) => {
         state.isLoading = true;
       })
@@ -106,7 +104,6 @@ const climateSlice = createSlice({
         console.error('Redux Core Pipeline Error:', action.error.message);
       })
 
-      // --- Scenario Simulation Cycle ---
       .addCase(submitModelPrediction.pending, (state) => {
         state.isLoading = true;
       })
@@ -115,8 +112,6 @@ const climateSlice = createSlice({
         if(action.payload.monthlySummary){
           state.monthlySummary = action.payload.monthlySummary;
         }
-        // state.dailyRecords = action.payload.dailyRecords;
-        // state.hourlyMatrix = action.payload.hourlyMatrix;
         if (action.payload.updatedDailyRecords) {
           state.dailyRecords = action.payload.updatedDailyRecords;
         }
@@ -134,7 +129,6 @@ const climateSlice = createSlice({
   }
 });
 
-// Export control hooks for layout configurations
 export const {
   setTimeStep,
   setVariable,

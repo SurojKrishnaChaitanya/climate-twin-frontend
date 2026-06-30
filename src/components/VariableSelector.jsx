@@ -4,11 +4,9 @@ import { setVariable } from '../store/climateSlice';
 
 export default function VariableSelector() {
   const dispatch = useDispatch();
-  
-  // Extract active selections and calculations from the central Redux store
+
   const { activeVariable, monthlySummary } = useSelector((state) => state.climate);
 
-  // 1. Resolve values dynamically based on the active state selection
   const displayValue = useMemo(() => {
     if (!monthlySummary) return '--';
     switch (activeVariable) {
@@ -27,7 +25,6 @@ export default function VariableSelector() {
     }
   }, [activeVariable, monthlySummary]);
 
-  // 2. Resolve matching textual labels for headers
   const labelValue = useMemo(() => {
     switch (activeVariable) {
       case 'lst_celsius': return 'AVG LAND SURFACE TEMP (LST)';
@@ -39,7 +36,6 @@ export default function VariableSelector() {
     }
   }, [activeVariable]);
 
-  // 3. Match theme colors seamlessly with layout accents
   const textAccentClass = useMemo(() => {
     switch (activeVariable) {
       case 'rainfall': return 'text-blue-500 drop-shadow-[0_0_12px_rgba(59,130,246,0.2)]';

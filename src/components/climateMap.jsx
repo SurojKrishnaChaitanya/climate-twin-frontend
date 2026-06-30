@@ -1,62 +1,9 @@
-// import React, { useMemo, useEffect } from 'react';
-// import { MapContainer, TileLayer } from 'react-leaflet';
-// import { useSelector, useDispatch } from 'react-redux';
-// import { fetchMonthlyClimateData } from '../store/climateSlice'; 
-// import HeatmapLayer from './HeatmapLayer';
-// import 'leaflet/dist/leaflet.css';
-
-// const BHOPAL_CENTER = [23.2599, 77.4126];
-
-// export default function ClimateMap() {
-//   const dispatch = useDispatch();
-//   const { activeTimeStep, activeVariable, dataRows = [] } = useSelector((state) => state.climate);
-
-//   useEffect(() => {
-//     dispatch(fetchMonthlyClimateData({ timeStepIndex: activeTimeStep, activeVariable }));
-//   }, [activeTimeStep, activeVariable, dispatch]);
-
-//   // Fallback data row if backend server array is empty
-//   const activeRows = dataRows.length > 0 ? dataRows : [{
-//     lat: 23.2599, lng: 77.4126, lst_celsius: 13.6, sst_celsius: 12.1, rainfall: 4.5
-//   }];
-
-//   const heatmapDataPoints = useMemo(() => {
-//     return activeRows.map(row => {
-//       const value = row[activeVariable] || 0;
-//       let intensity = 0.5;
-//       if (activeVariable.includes('lst')) intensity = (value - 10) / 35;
-//       else if (activeVariable.includes('sst')) intensity = (value - 10) / 28;
-//       else if (activeVariable === 'rainfall') intensity = value / 400;              
-      
-//       return [row.lat, row.lng, Math.max(0.1, Math.min(1.0, intensity))];
-//     });
-//   }, [activeRows, activeVariable]);
-
-//   return (
-//     <div className="absolute inset-0 w-full h-full z-0 bg-[#020617]">
-//       <MapContainer 
-//         center={BHOPAL_CENTER} 
-//         zoom={11} 
-//         style={{ height: '100%', width: '100%' }}
-//         zoomControl={false}
-//       >
-//         <TileLayer
-//           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-//           attribution='&copy; CARTO'
-//         />
-//         <HeatmapLayer dataPoints={heatmapDataPoints} />
-//       </MapContainer>
-//     </div>
-//   );
-// }
-
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useSelector, useDispatch } from 'react-redux';
 import { setCustomMarker, dismissPilotAlert } from '../store/climateSlice';
 import L from 'leaflet';
 
-// 🌐 Fix for default Leaflet marker icon asset mapping mismatches in Vite
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -82,39 +29,32 @@ function MapViewportController({ center, zoom }) {
 // =========================================================================
 export default function ClimateMap() {
   const dispatch = useDispatch();
-  
-  // Extract state variables directly from the core Redux store
+
   const { customMarker, isAlertOpen } = useSelector((state) => state.climate);
 
-  // Local state managers for parsing manual text inputs safely
   const [inputLat, setInputLat] = useState('');
   const [inputLng, setInputLng] = useState('');
 
-  // Fixed coordinates for the initial view steps
   const INDIA_CENTER = [20.5937, 78.9629];
   const BHOPAL_CENTER = [23.2599, 77.4126];
 
-  // Dynamic state selectors to update active viewport targets
   const [currentCenter, setCurrentCenter] = useState(INDIA_CENTER);
   const [currentZoom, setCurrentZoom] = useState(5);
 
-  // Monitors state switches to handle automated zoom transitions down to Bhopal
   useEffect(() => {
     if (!isAlertOpen && !customMarker) {
       setCurrentCenter(BHOPAL_CENTER);
-      setCurrentZoom(11); // Focus tightly on Bhopal regional polygons
+      setCurrentZoom(11);
     }
   }, [isAlertOpen, customMarker]);
 
-  // Monitors coordinate changes to handle manual layout adjustments
   useEffect(() => {
     if (customMarker) {
       setCurrentCenter([customMarker.lat, customMarker.lng]);
-      setCurrentZoom(13); // Higher zoom profile for specific coordinates
+      setCurrentZoom(13);
     }
   }, [customMarker]);
 
-  // Handler for checking and submitting coordinate changes
   const handleCoordinateSubmit = (e) => {
     e.preventDefault();
     const lat = parseFloat(inputLat);
@@ -134,7 +74,7 @@ export default function ClimateMap() {
       <MapContainer
         center={currentCenter}
         zoom={currentZoom}
-        zoomControl={false} // Disable to keep view elements unblocked
+        zoomControl={false}
         className="w-full h-full z-0"
       >
         {/* Dark Map Canvas Assets matching your layout theme */}

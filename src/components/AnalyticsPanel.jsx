@@ -6,7 +6,6 @@ import { setHoveredDay, submitModelPrediction, updatePendingTemp, updatePendingR
 export default function AnalyticsPanel() {
   const dispatch = useDispatch();
 
-  // Extract variables from the global Redux state tree
   const { 
     activeVariable, 
     dailyRecords, 
@@ -20,40 +19,30 @@ export default function AnalyticsPanel() {
     isLoading 
   } = useSelector((state) => state.climate);
 
-  // Local tracking variable for custom text entry prompts
   const [textPrompt, setTextPrompt] = useState('');
 
-  // 1. Resolve Active Color Accents based on your selected active layer variable
   const activeColor = useMemo(() => {
     switch (activeVariable) {
-      case 'rainfall': return '#3b82f6'; // Bright Blue
-      case 'sst_celsius': return '#a78bfa'; // Purple Accent
-      case 'windspeed': return '#10b981'; // Emerald Green
-      case 'drought_index': return '#f59e0b'; // Amber Warning
-      default: return '#22d3ee'; // Cyan LST Base
+      case 'rainfall': return '#3b82f6';
+      case 'sst_celsius': return '#a78bfa';
+      case 'windspeed': return '#10b981';
+      case 'drought_index': return '#f59e0b';
+      default: return '#22d3ee';
     }
   }, [activeVariable]);
 
-  // 2. Safely capture the 12-point dataset matching whatever day is hovered on Chart 1
-  // const activeHourlyData = useMemo(() => {
-  //   if (!hourlyMatrix || !hourlyMatrix[hoveredDay]) return [];
-  //   return hourlyMatrix[hoveredDay];
-  // }, [hourlyMatrix, hoveredDay]);
   const activeHourlyData = useMemo(() => {
     if (!hourlyMatrix) return [];
-    
-    // If it's already a valid direct lookup key (e.g., "Day 1")
+
     if (hourlyMatrix[hoveredDay]) {
       return hourlyMatrix[hoveredDay];
     }
-    
-    // Robust Fallback: If hoveredDay is just a raw number (e.g., 1 or "1"), map it to "Day X"
+
     const standardKey = `Day ${hoveredDay}`;
     if (hourlyMatrix[standardKey]) {
       return hourlyMatrix[standardKey];
     }
-    
-    // Secondary Fallback: Grab the very first available day array so it never renders completely blank
+
     const allAvailableDays = Object.keys(hourlyMatrix);
     if (allAvailableDays.length > 0) {
       return hourlyMatrix[allAvailableDays[0]];
@@ -62,7 +51,6 @@ export default function AnalyticsPanel() {
     return [];
   }, [hourlyMatrix, hoveredDay]);
 
-  // 3. Formatter helper to display unit readings correctly across charts
   const formatUnitLabel = (value) => {
     if (activeVariable === 'rainfall') return `${value} mm`;
     if (activeVariable === 'windspeed') return `${value} m/s`;
@@ -70,22 +58,18 @@ export default function AnalyticsPanel() {
     return `${value} °C`;
   };
 
-  // Updated click handler targeting explicitly selected graph nodes
   const handleChartOneClick = (e) => {
-    // Recharts click payloads expose the raw active label or activePayload array directly
     if (e && e.activePayload && e.activePayload[0]) {
       const clickedDayLabel = e.activePayload[0].payload.dayLabel;
       
       if (clickedDayLabel) {
-        dispatch(setHoveredDay(clickedDayLabel)); // Reuses the slice state to lock the viewport day
+        dispatch(setHoveredDay(clickedDayLabel));
       }
     } else if (e && e.activeLabel) {
-      // Fallback if click is registered directly on the X-Axis text node
       dispatch(setHoveredDay(e.activeLabel));
     }
   };
 
-  // Submission routing for the enhanced simulation engine
   const handleSimulationSubmit = (e) => {
     e.preventDefault();
     dispatch(submitModelPrediction(textPrompt));
@@ -279,7 +263,7 @@ export default function AnalyticsPanel() {
                       key={index}
                       onClick={() => {
                         setTextPrompt(suggestion);
-                        dispatch(setActivePopup('query')); // Instantly shift view so they can review/edit
+                        dispatch(setActivePopup('query'));
                       }}
                       className="w-full p-2.5 rounded-lg border border-slate-800 bg-slate-950/60 hover:bg-slate-900/80 text-[11px] text-left leading-relaxed text-slate-300 hover:text-cyan-400 hover:border-cyan-900/50 transition-all block"
                     >
