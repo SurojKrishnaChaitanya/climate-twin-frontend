@@ -1,0 +1,9 @@
+@import "tailwindcss";
+.leaflet-container {
+  background: #0f172a !important;
+}
+
+/* Enhances map blending by allowing the canvas vectors to bleed into the dark theme tiles */
+.leaflet-tile-container {
+  mix-blend-mode: lighten;
+}

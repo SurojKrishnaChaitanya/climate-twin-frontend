@@ -1,0 +1,159 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
+// =========================================================================
+// ASYNC THUNKS: EXPRESS API CORE CONNECTORS
+// =========================================================================
+
+// 🛰️ 1. Fetch Baseline Historical Matrices
+export const fetchMonthlyClimateData = createAsyncThunk(
+  'climate/fetchMonthlyData',
+  async ({ timeStepIndex }) => {
+    const response = await fetch(`http://localhost:8000/api/climate-metrics?step=${timeStepIndex}`);
+    if (!response.ok) {
+      throw new Error('Failed to retrieve baseline climate parameters from server.');
+    }
+    return await response.json();
+  }
+);
+
+// 🚀 2. Submit Slider Deltas + Custom AI Scenario Queries
+export const submitModelPrediction = createAsyncThunk(
+  'climate/submitModelPrediction',
+  async (customQueryText, { getState }) => {
+    const { activeTimeStep, pendingDeltaTemp, pendingDeltaRain } = getState().climate;
+    
+    const response = await fetch('http://localhost:8000/api/predict-scenario', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        time_step: activeTimeStep,
+        delta_temp: pendingDeltaTemp,
+        delta_rain: pendingDeltaRain,
+        custom_query: customQueryText || "" // Sends free-text prompts to our keyword interpreter
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('AI computation pipeline failed to execute prediction scenario.');
+    }
+    return await response.json();
+  }
+);
+
+// =========================================================================
+// SLICE CONFIGURATION & STATE INITIALIZATION
+// =========================================================================
+const climateSlice = createSlice({
+  name: 'climate',
+  initialState: {
+    // Variable Layers & Sliders
+    activeTimeStep: 0,
+    activeVariable: 'lst_celsius',
+    pendingDeltaTemp: 0,
+    pendingDeltaRain: 0,
+    
+    // Core Server Datasets
+    monthlySummary: {
+      avg_lst: 13.6,
+      avg_sst: 12.1,
+      avg_rainfall: 4.5,
+      avg_windspeed: 2.8,
+      drought_index: 0.25
+    },
+    dailyRecords: [], // Data matrix for Chart 1 (30 Days)
+    hourlyMatrix: {}, // Multi-dimensional matrix for Chart 2 (Keyed by Day)
+
+    activePopup: null,
+    aiSuggestions: [],
+    // UI Interaction Tracking Hooks
+    hoveredDay: 'Day 1', // Links Chart 1 mouse-overs directly to Chart 2 inputs
+    customMarker: null,  // Holds manual geospatial coordinates: { lat, lng }
+    queryResponse: '',   // Displays conversational text output from the simulation sandbox
+    isAlertOpen: true,   // Controls structural country-to-region introductory alert state
+    isLoading: false
+  },
+  reducers: {
+    setActivePopup: (state,action) => {
+      state.activePopup = action.payload;
+    },
+    setTimeStep: (state, action) => {
+      state.activeTimeStep = action.payload;
+    },
+    setVariable: (state, action) => {
+      state.activeVariable = action.payload;
+    },
+    updatePendingTemp: (state, action) => {
+      state.pendingDeltaTemp = action.payload;
+    },
+    updatePendingRain: (state, action) => {
+      state.pendingDeltaRain = action.payload;
+    },
+    setHoveredDay: (state, action) => {
+      state.hoveredDay = action.payload;
+    },
+    setCustomMarker: (state, action) => {
+      state.customMarker = action.payload; // Formatted payload structure: { lat: float, lng: float }
+    },
+    dismissPilotAlert: (state) => {
+      state.isAlertOpen = false;
+    }
+  },
+  extraReducers: (builder) => {
+    builder
+      // --- Baseline Retrieval Cycle ---
+      .addCase(fetchMonthlyClimateData.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchMonthlyClimateData.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.monthlySummary = action.payload.monthlySummary;
+        state.dailyRecords = action.payload.dailyRecords;
+        state.hourlyMatrix = action.payload.hourlyMatrix;
+        state.aiSuggestions = action.payload.aiSuggestions || []
+      })
+      .addCase(fetchMonthlyClimateData.rejected, (state, action) => {
+        state.isLoading = false;
+        console.error('Redux Core Pipeline Error:', action.error.message);
+      })
+
+      // --- Scenario Simulation Cycle ---
+      .addCase(submitModelPrediction.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(submitModelPrediction.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if(action.payload.monthlySummary){
+          state.monthlySummary = action.payload.monthlySummary;
+        }
+        // state.dailyRecords = action.payload.dailyRecords;
+        // state.hourlyMatrix = action.payload.hourlyMatrix;
+        if (action.payload.updatedDailyRecords) {
+          state.dailyRecords = action.payload.updatedDailyRecords;
+        }
+        
+        if (action.payload.updatedHourlyMatrix) {
+          state.hourlyMatrix = action.payload.updatedHourlyMatrix;
+        }
+        state.queryResponse = action.payload.queryResponse
+      })
+      .addCase(submitModelPrediction.rejected, (state, action) => {
+        state.isLoading = false;
+        state.queryResponse = "Simulation engine timed out or encountered exception syntax.";
+        console.error('Simulation Pipeline Error:', action.error.message);
+      });
+  }
+});
+
+// Export control hooks for layout configurations
+export const {
+  setTimeStep,
+  setVariable,
+  updatePendingTemp,
+  updatePendingRain,
+  setHoveredDay,
+  setCustomMarker,
+  dismissPilotAlert,
+  setActivePopup
+} = climateSlice.actions;
+
+export default climateSlice.reducer;
