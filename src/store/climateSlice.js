@@ -8,7 +8,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 export const fetchMonthlyClimateData = createAsyncThunk(
   'climate/fetchMonthlyData',
   async ({ timeStepIndex }) => {
-    const response = await fetch(`http://localhost:8000/api/climate-metrics?step=${timeStepIndex}`);
+    const response = await fetch(`https://climate-twin-backend.onrender.com/api/climate-metrics?step=${timeStepIndex}`);
     if (!response.ok) {
       throw new Error('Failed to retrieve baseline climate parameters from server.');
     }
@@ -22,7 +22,7 @@ export const submitModelPrediction = createAsyncThunk(
   async (customQueryText, { getState }) => {
     const { activeTimeStep, pendingDeltaTemp, pendingDeltaRain } = getState().climate;
     
-    const response = await fetch('http://localhost:8000/api/predict-scenario', {
+    const response = await fetch(`https://climate-twin-backend.onrender.com/api/predict-scenario`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
