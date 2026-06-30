@@ -1,10 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
-// =========================================================================
-// ASYNC THUNKS: EXPRESS API CORE CONNECTORS
-// =========================================================================
-
-// 🛰️ 1. Fetch Baseline Historical Matrices
 export const fetchMonthlyClimateData = createAsyncThunk(
   'climate/fetchMonthlyData',
   async ({ timeStepIndex }) => {
@@ -16,7 +10,7 @@ export const fetchMonthlyClimateData = createAsyncThunk(
   }
 );
 
-// 🚀 2. Submit Slider Deltas + Custom AI Scenario Queries
+
 export const submitModelPrediction = createAsyncThunk(
   'climate/submitModelPrediction',
   async (customQueryText, { getState }) => {
@@ -29,7 +23,7 @@ export const submitModelPrediction = createAsyncThunk(
         time_step: activeTimeStep,
         delta_temp: pendingDeltaTemp,
         delta_rain: pendingDeltaRain,
-        custom_query: customQueryText || "" // Sends free-text prompts to our keyword interpreter
+        custom_query: customQueryText || "" 
       })
     });
 
@@ -40,19 +34,15 @@ export const submitModelPrediction = createAsyncThunk(
   }
 );
 
-// =========================================================================
-// SLICE CONFIGURATION & STATE INITIALIZATION
-// =========================================================================
 const climateSlice = createSlice({
   name: 'climate',
   initialState: {
-    // Variable Layers & Sliders
+
     activeTimeStep: 0,
     activeVariable: 'lst_celsius',
     pendingDeltaTemp: 0,
     pendingDeltaRain: 0,
-    
-    // Core Server Datasets
+
     monthlySummary: {
       avg_lst: 13.6,
       avg_sst: 12.1,
@@ -60,8 +50,8 @@ const climateSlice = createSlice({
       avg_windspeed: 2.8,
       drought_index: 0.25
     },
-    dailyRecords: [], // Data matrix for Chart 1 (30 Days)
-    hourlyMatrix: {}, // Multi-dimensional matrix for Chart 2 (Keyed by Day)
+    dailyRecords: [],
+    hourlyMatrix: {},
 
     activePopup: null,
     aiSuggestions: [],
